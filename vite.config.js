@@ -25,6 +25,7 @@ if (host === "localhost") {
     host: "localhost",
     port: 64999,
     clientPort: 64999,
+    overlay: false,
   };
 } else {
   hmrConfig = {
@@ -32,6 +33,7 @@ if (host === "localhost") {
     host: host,
     port: parseInt(process.env.FRONTEND_PORT) || 8002,
     clientPort: 443,
+    overlay: false,
   };
 }
 

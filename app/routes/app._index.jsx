@@ -1,13 +1,63 @@
 import { useEffect } from "react";
-import { useFetcher } from "react-router";
+import { useFetcher, useLoaderData, useSearchParams } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
 
-  return null;
+  // Check for plan and status from Managed Pricing welcome link
+  const url = new URL(request.url);
+  const plan = url.searchParams.get("plan");
+  const status = url.searchParams.get("status");
+
+  let welcomeMessage = null;
+  if (status === "approved" && plan) {
+    welcomeMessage = `Successfully subscribed to ${plan} plan!`;
+  } else if (status === "declined") {
+    welcomeMessage = "Subscription was declined.";
+  }
+
+  // Check current subscription status
+  const response = await admin.graphql(
+    `#graphql
+      query {
+        currentAppInstallation {
+          activeSubscriptions {
+            id
+            name
+            status
+            lineItems {
+              id
+              plan {
+                pricingDetails {
+                  ... on AppRecurringPricing {
+                    __typename
+                    price {
+                      amount
+                      currencyCode
+                    }
+                    interval
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`,
+  );
+
+  const data = await response.json();
+  const activeSubscriptions =
+    data.data?.currentAppInstallation?.activeSubscriptions || [];
+
+  return {
+    shop: session.shop,
+    hasActiveSubscription: activeSubscriptions.length > 0,
+    subscriptions: activeSubscriptions,
+    welcomeMessage,
+  };
 };
 
 export const action = async ({ request }) => {
@@ -76,11 +126,38 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
+  const { hasActiveSubscription, subscriptions, welcomeMessage } =
+    useLoaderData();
+  const [searchParams] = useSearchParams();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
     fetcher.formMethod === "POST";
+
+  // Show welcome message from Managed Pricing
+  useEffect(() => {
+    if (welcomeMessage) {
+      shopify.toast.show(welcomeMessage);
+    }
+  }, [welcomeMessage, shopify]);
+
+  // Show toast messages based on URL params
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const error = searchParams.get("error");
+    const info = searchParams.get("info");
+
+    if (success === "subscription_activated") {
+      shopify.toast.show("Subscription activated successfully!");
+    } else if (error === "subscription_declined") {
+      shopify.toast.show("Subscription was declined", { isError: true });
+    } else if (error) {
+      shopify.toast.show(`Error: ${error}`, { isError: true });
+    } else if (info === "subscription_pending") {
+      shopify.toast.show("Subscription is pending approval");
+    }
+  }, [searchParams, shopify]);
 
   useEffect(() => {
     if (fetcher.data?.product?.id) {
@@ -94,6 +171,31 @@ export default function Index() {
       <s-button slot="primary-action" onClick={generateProduct}>
         Generate a product
       </s-button>
+
+      {/* Subscription Status Banner */}
+      {!hasActiveSubscription && (
+        <s-banner tone="warning">
+          <s-stack direction="block" gap="base">
+            <s-text>
+              You don&apos;t have an active subscription. Please subscribe to
+              use all features.
+            </s-text>
+            <s-link href="/app/subscription">Choose a plan</s-link>
+          </s-stack>
+        </s-banner>
+      )}
+
+      {hasActiveSubscription && subscriptions.length > 0 && (
+        <s-banner tone="success">
+          <s-stack direction="block" gap="base">
+            <s-text>
+              Active subscription: {subscriptions[0].name} (
+              {subscriptions[0].status})
+            </s-text>
+            <s-link href="/app/subscription">Manage subscription</s-link>
+          </s-stack>
+        </s-banner>
+      )}
 
       <s-section heading="Congrats on creating a new Shopify app 🎉">
         <s-paragraph>

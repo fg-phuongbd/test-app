@@ -1,24 +1,12 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "12eaccf13aa83204371e486881a9f155"
-name = "test-app"
+client_id = "51bd268f9d9243f7b0748759d81d6b60"
+name = "test-new"
 application_url = "https://example.com"
 embedded = true
 
-[build]
-automatically_update_urls_on_dev = true
-include_config_on_deploy = true
-
 [webhooks]
 api_version = "2026-01"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -28,3 +16,6 @@ use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [ ]
+
+[build]
+automatically_update_urls_on_dev = true
