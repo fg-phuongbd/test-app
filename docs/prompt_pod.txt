@@ -1,9 +1,0 @@
-Task: Isolate the printed graphic from this T-shirt.
-
-Instructions:
-1. Identify the print/artwork on the shirt.
-2. Remove the T-shirt fabric, background, shadows, wrinkles, and any non-design elements (collar, sleeves, tags).
-3. Return ONLY the isolated core design graphic as a high-resolution PNG on a completely transparent background.
-4. Preserve all original colors, sharpness, and intricate details of the print.
-5. Ensure clean, crisp edges with no artifacts, halos, or fabric residue around the design.
-6. Output must be high-quality (300 DPI or 4K equivalent), ready for professional-grade printing on other apparel without further processing.
