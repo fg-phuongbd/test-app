@@ -1,0 +1,95 @@
+{% comment %}
+  visual-editor-embed.liquid
+  App embed block (target: body) for the Visual Translation Editor.
+
+  This script is ONLY active when:
+    ?visual_translate=1 is present in the URL
+    (optionally: preview_theme_id is also present)
+
+  It highlights .translation-target elements on hover and
+  sends a postMessage to the parent frame (the app admin page)
+  when the merchant clicks one.
+{% endcomment %}
+
+<style>
+  .translation-target {
+    cursor: pointer;
+    outline: none;
+    transition: outline 0.1s ease, background 0.1s ease;
+  }
+  .translation-target:hover,
+  .translation-target--highlighted {
+    outline: 2px solid #008060;
+    outline-offset: 2px;
+    background: rgba(0, 128, 96, 0.06);
+    border-radius: 2px;
+  }
+</style>
+
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('visual_translate') !== '1') return;
+
+  function attachHandlers() {
+    var targets = document.querySelectorAll('.translation-target');
+    targets.forEach(function (el) {
+      // Avoid double-binding
+      if (el.dataset.veListening) return;
+      el.dataset.veListening = '1';
+
+      el.addEventListener('mouseenter', function () {
+        el.classList.add('translation-target--highlighted');
+      });
+      el.addEventListener('mouseleave', function () {
+        el.classList.remove('translation-target--highlighted');
+      });
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var detail = {};
+        Object.keys(el.dataset).forEach(function (key) {
+          if (key.startsWith('translation')) {
+            detail[key] = el.dataset[key];
+          }
+        });
+
+        // Send to the app window that opened this preview (window.opener)
+        // Falls back to parent frame if somehow embedded in an iframe
+        var target = window.opener || window.parent;
+        target.postMessage(
+          { type: 'visualTranslation:open', detail: detail },
+          '*'
+        );
+
+        // Also dispatch locally for same-frame listeners
+        window.dispatchEvent(
+          new CustomEvent('visualTranslation:open', { detail: detail })
+        );
+      });
+    });
+  }
+
+  // Initial attachment
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachHandlers);
+  } else {
+    attachHandlers();
+  }
+
+  // Re-attach for any dynamically added elements (e.g. sections loaded later)
+  var observer = new MutationObserver(function () {
+    attachHandlers();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Visual Editor Overlay",
+  "target": "body"
+}
+{% endschema %}
+

@@ -22,7 +22,7 @@ export const loader = async ({ request }) => {
 
   const data = await response.json();
   const appInfo = data.data?.currentAppInstallation?.app;
-  const appHandle = appInfo?.handle || "test-new";
+  const appHandle = appInfo?.handle || "demo-app";
   const apiKey = appInfo?.apiKey;
 
   // Get shop name without .myshopify.com

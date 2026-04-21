@@ -1,5 +1,5 @@
 {
-  "name": "test-app",
+  "name": "demo-app",
   "private": true,
   "scripts": {
     "build": "react-router build",
@@ -32,11 +32,17 @@
     "@shopify/app-bridge-react": "^4.2.4",
     "@shopify/shopify-app-react-router": "^1.1.0",
     "@shopify/shopify-app-session-storage-prisma": "^8.0.0",
+    "@tiptap/pm": "^3.22.3",
+    "@tiptap/react": "^3.22.3",
+    "@tiptap/starter-kit": "^3.22.3",
+    "date-fns": "^4.1.0",
     "isbot": "^5.1.31",
+    "node-cron": "^4.2.1",
     "prisma": "^6.16.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.12.0",
+    "recharts": "^3.8.1",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
